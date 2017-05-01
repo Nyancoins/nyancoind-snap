@@ -1,0 +1,46 @@
+name: nyancoind # you probably want to 'snapcraft register <name>'
+version: '1.3.0' # just for humans, typically '1.2+git' or '1.3.2'
+summary: NyanCoin daemon # 79 char long summary
+description: |
+  A full headless wallet daemon for the NyanCoin network built by /u/vmp32k.
+  See https://reddit.com/r/NyanCoins
+
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: devmode # use 'strict' once you have the right plugs and slots
+
+parts:
+  git-src:
+    # See 'snapcraft plugins'
+    source: "https://github.com/Nyancoins/nyancoin-client.git"
+    source-type: git
+
+    build-packages:
+      - libssl-dev
+      - libdb-dev
+      - libdb++-dev
+      - libboost-filesystem-dev
+      - libboost-program-options-dev
+      - libboost-thread-dev
+      - libminiupnpc-dev
+      - make
+      - build-essential
+      - git
+      - coreutils
+
+    plugin: make
+    build: |
+      cd src
+      make -f makefile.unix RELEASE=1 STATIC=1 -j`nproc`
+      strip -s nyancoind
+    install: |
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      mv src/nyancoind $SNAPCRAFT_PART_INSTALL/bin/
+
+apps:
+  nyancoind:
+    command: bin/nyancoind
+    daemon: forking
+    plugs:
+      - network
+      - network-bind
+      - home
